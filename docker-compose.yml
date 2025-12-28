@@ -1,0 +1,47 @@
+services:
+  postgres:
+    image: postgres:15
+    container_name: taskapp-postgres
+    environment:
+      POSTGRES_DB: taskapp
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    restart: unless-stopped
+
+
+  backend:
+    image: ramaayoub/taskapp-backend:latest
+    container_name: taskapp-backend
+    environment:
+      PORT: 3002
+      DBHost: postgres
+      DBPort: 5432
+      DBName: taskapp
+      DBUser: admin
+      DBPassword: password123
+    ports:
+      - "3002:3002"
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  frontend:
+    image: ramaayoub/taskapp-frontend:latest
+    container_name: taskapp-frontend
+    environment:
+      REACT_APP_API_URL: "http://localhost:3002"
+      CHOKIDAR_USEPOLLING: "true"
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+
+volumes:
+  pgdata:
